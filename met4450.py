@@ -38,7 +38,10 @@ def _goes_file_df(satellite, product, start, end, bands=None, refresh=True):
     files = []
     for DATE in DATES:
         files += fs.ls(f"{satellite}/{product}/{DATE:%Y/%j/%H/}", refresh=refresh)
-
+    
+    if len(files)==0:
+        raise ValueError( f"No files found for \nSatellite: {satellite} \nProduct: {product} \nDates: {DATES}" )
+    
     # Build a table of the files
     # --------------------------
     df = pd.DataFrame(files, columns=["file"])
@@ -135,7 +138,11 @@ def find_goes_dataset(satellite=16,
     # For mesoscale domains, select just one 
     if domain in ['M1','M2']:
         df = df.loc[df.product_mode.str.contains(product+domain),:]
-        
+    
+    # Add info for product and domain
+    df['product'] = product
+    df['domain']  = domain
+    
     # Get row that matches the nearest time
     df = df.sort_values("start")
     df = df.set_index(df.start)
